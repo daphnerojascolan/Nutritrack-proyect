@@ -1,397 +1,297 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
 package com.nutri;
 
-/**
- *
- * @author ASUS
- */
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+import java.time.LocalDate;
 
-// Imports para guardar/cargar datos
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.IOException;
+/**
+ * Clase principal del sistema Nutritrack.
+ * Permite registrar usuarios, comidas, hábitos, nutrientes y metas.
+ */
 
 public class NutritrackProyect {
 
-    // ====== ATRIBUTOS PRINCIPALES ======
-    private ArrayList<Usuario> usuarios;
-    private ArrayList<Alimento> alimentos;
-    private ArrayList<RegistroAlimenticio> registros;
-    private ArrayList<HabitoDiario> habitos;
-    private ArrayList<ReporteSemanal> reportes;
-    private final Scanner scanner;
+    // Colores ANSI
+    public static final String RESET = "\u001B[0m";
+    public static final String GREEN = "\u001B[32m";
+    public static final String BLUE = "\u001B[34m";
+    public static final String CYAN = "\u001B[36m";
+    public static final String YELLOW = "\u001B[33m";
+    public static final String RED = "\u001B[31m";
 
-    // ====== CONSTRUCTOR ======
-    public NutritrackProyect() {
-        this.usuarios = new ArrayList<>();
-        this.alimentos = new ArrayList<>();
-        this.registros = new ArrayList<>();
-        this.habitos = new ArrayList<>();
-        this.reportes = new ArrayList<>();
-        this.scanner = new Scanner(System.in);
-    }
+    // Listas en memoria
+    private static List<Usuario> usuarios = new ArrayList<>();
+    private static List<Comida> comidas = new ArrayList<>();
+    private static List<Habito> habitos = new ArrayList<>();
+    private static List<Meta> metas = new ArrayList<>();
 
-    // ====== MÉTODO PRINCIPAL (main) ======
+    private static Usuario usuarioActual = null;
+
     public static void main(String[] args) {
-        NutritrackProyect app = new NutritrackProyect();
-        app.datosIniciales();
-        app.mostrarMenuPrincipal();
-    }
-public void datosIniciales() {
-}
-public void mostrarMenuPrincipal() {
-    int opcion;
-    do {
-       
-            System.out.println("\n===== MENU PRINCIPAL =====");
-            System.out.println("1. Gestionar usuarios");
-            System.out.println("2. Registrar comida");
-            System.out.println("3. Registrar habitos diarios");
-            System.out.println("4. Mostrar registros alimenticios");
-            System.out.println("5. Generar reporte semanal");
-            System.out.println("6. Mostrar recomendaciones");
-            System.out.println("7. Guardar datos");
-            System.out.println("8. Cargar datos");
-            System.out.println("9. Salir");
-            System.out.print("Seleccione una opcion: ");
-            opcion = scanner.nextInt();
-            scanner.nextLine();
-   switch (opcion) {
-                case 1 -> gestionarUsuarios();
-                case 2 -> registrarComida();
-                case 3 -> registrarHabito();
-                case 4 -> mostrarHabitos();
-                case 5 -> generarReporteSemanal();
-                case 6 -> mostrarRecomendacionesDiarias();
-                case 7 -> guardarDatos();
-                case 8 -> cargarDatos();
-                case 9 -> System.out.println("¡Gracias por usar AppNutriTrack!");
-                default -> System.out.println("Opción no válida.");
+        Scanner sc = new Scanner(System.in);
+        int opcion;
+
+        do {
+            mostrarMenu();
+            System.out.print(GREEN + "Selecciona una opción: " + RESET);
+            while (!sc.hasNextInt()) {
+                System.out.println(RED + "Por favor ingrese un número válido." + RESET);
+                sc.next();
             }
-        } while (opcion != 9);
+            opcion = sc.nextInt();
+            sc.nextLine();
+
+            switch (opcion) {
+                case 1 -> registrarUsuario(sc);
+                case 2 -> iniciarSesion(sc);
+                case 3 -> registrarComida(sc);
+                case 4 -> listarComidasPorFecha(sc);
+                case 5 -> buscarComidaPorNombre(sc);
+                case 6 -> calcularNutricionTotalDelDia(sc);
+                case 7 -> consultarNutrientesDeComida(sc);
+                case 8 -> registrarHabito(sc);
+                case 9 -> mostrarHistorialHabitos();
+                case 10 -> crearMeta(sc);
+                case 11 -> actualizarProgresoMeta(sc);
+                case 12 -> generarReporteSemanal();
+                case 0 -> System.out.println(YELLOW + "Gracias por usar Nutritrack. ¡Hasta pronto!" + RESET);
+                default -> System.out.println(RED + "Opción no válida. Intenta nuevamente." + RESET);
+            }
+        } while (opcion != 0);
     }
 
-// =====Métodos de Usuarios=====
-    public void gestionarUsuarios() {
-        // Permitir registrar o actualizar usuarios
-    int opcion;
-    do {
-       
-        System.out.println("\n=== GESTION DE USUARIOS ===");
-        System.out.println("1. Registrar nuevo usuario");
-        System.out.println("2. Ver usuarios registrados");
-        System.out.println("3. Volver al menu principal");
-        System.out.print("Seleccione una opcion: ");
-        opcion = scanner.nextInt();
-        scanner.nextLine();
+    private static void mostrarMenu() {
+        System.out.println(BLUE + "\n===== MENÚ PRINCIPAL - NUTRITRACK =====" + RESET);
+        System.out.println("1. Registrar usuario");
+        System.out.println("2. Iniciar sesión");
+        System.out.println("3. Registrar comida");
+        System.out.println("4. Listar comidas por fecha");
+        System.out.println("5. Buscar comidas por nombre");
+        System.out.println("6. Calcular información nutricional total del día");
+        System.out.println("7. Consultar nutrientes de una comida específica");
+        System.out.println("8. Registrar hábito diario");
+        System.out.println("9. Mostrar historial de hábitos");
+        System.out.println("10. Crear meta de nutrición o actividad");
+        System.out.println("11. Actualizar progreso hacia la meta");
+        System.out.println("12. Generar reporte semanal");
+        System.out.println("0. Salir");
+    }
 
-        switch (opcion) {
-            case 1 -> registrarUsuario();
-            case 2 -> mostrarUsuarios();
-            case 3 -> System.out.println("Regresando al menu principal...");
-            default -> System.out.println("Opcion no valida.");
-        }
-    } while (opcion != 3);
-}
-// Registrar un nuevo usuario
-public void registrarUsuario() {
-    System.out.print("Ingrese nombre: ");
-    String nombre = scanner.nextLine();
+    // Solo Usuario
+    // 1. Registrar usuario
+    private static void registrarUsuario(Scanner sc) {
+        System.out.print("Nombre: ");
+        String nombre = sc.nextLine();
+        System.out.print("Email: ");
+        String email = sc.nextLine();
+        System.out.print("Contraseña: ");
+        String pass = sc.nextLine();
 
-    System.out.print("Ingrese edad: ");
-    int edad = scanner.nextInt();
+        usuarios.add(new Usuario(nombre, email, pass));
+        System.out.println(GREEN + "Usuario registrado exitosamente." + RESET);
+    }
 
-    System.out.print("Ingrese peso (kg): ");
-    double peso = scanner.nextDouble();
+    // 2. Iniciar sesión
+    private static void iniciarSesion(Scanner sc) {
+        System.out.print("Email: ");
+        String email = sc.nextLine();
+        System.out.print("Contraseña: ");
+        String pass = sc.nextLine();
 
-    System.out.print("Ingrese altura (m): ");
-    double altura = scanner.nextDouble();
-    scanner.nextLine(); // limpiar buffer
-
-    System.out.print("Ingrese objetivo nutricional (por ejemplo: bajar de peso, mantener, ganar masa): ");
-    String objetivo = scanner.nextLine();
-
-    Usuario nuevo = new Usuario(usuarios.size() + 1, nombre, edad, peso, altura, objetivo);
-    usuarios.add(nuevo);
-
-    System.out.println("✅ Usuario registrado correctamente.");
-}
-
-// Mostrar todos los usuarios registrados
-public void mostrarUsuarios() {
-    if (usuarios.isEmpty()) {
-        System.out.println("No hay usuarios registrados.");
-    } else {
-        System.out.println("\n--- LISTA DE USUARIOS ---");
         for (Usuario u : usuarios) {
-            System.out.println(u.verPerfil());
+            if (u.getEmail().equals(email) && u.getContrasena().equals(pass)) {
+                usuarioActual = u;
+                System.out.println(GREEN + "Inicio de sesión exitoso. Bienvenido, " + u.getNombre() + "!" + RESET);
+                return;
+            }
         }
-    }
-  }
-// ====== Métodos de registro=====
-public void registrarComida() {
-    if (usuarios.isEmpty()) {
-        System.out.println("⚠️ No hay usuarios registrados. Registre uno primero.");
-        return;
+        System.out.println(RED + "Credenciales incorrectas." + RESET);
     }
 
-    System.out.println("\n=== REGISTRAR COMIDA ===");
-    mostrarUsuarios();
-
-    System.out.print("Seleccione el ID del usuario: ");
-    int idUsuario = scanner.nextInt();
-    scanner.nextLine(); 
-        Usuario usuario = null;
-    for (Usuario u : usuarios) {
-        if (u.getId() == idUsuario) {
-            usuario = u;
-            break;
+    // Solo Comida
+    // 3. Registrar comida
+    private static void registrarComida(Scanner sc) {
+        if (usuarioActual == null) {
+            System.out.println(RED + "Debes iniciar sesión primero." + RESET);
+            return;
         }
+
+        System.out.print("Nombre de la comida: ");
+        String nombre = sc.nextLine();
+        System.out.print("Calorías: ");
+        double calorias = sc.nextDouble();
+        System.out.print("Carbohidratos (g): ");
+        double carbs = sc.nextDouble();
+        System.out.print("Proteínas (g): ");
+        double prot = sc.nextDouble();
+        System.out.print("Grasas (g): ");
+        double grasa = sc.nextDouble();
+        sc.nextLine();
+        System.out.print("Observación: ");
+        String obs = sc.nextLine();
+
+        Nutriente n = new Nutriente(calorias, carbs, prot, grasa);
+        comidas.add(new Comida(nombre, LocalDate.now(), n, obs));
+        System.out.println(GREEN + "Comida registrada exitosamente." + RESET);
+    }
+
+    // 4. Listar comidas por fecha
+    private static void listarComidasPorFecha(Scanner sc) {
+        System.out.print("Ingrese la fecha (DD/MM/YY): ");
+        LocalDate fecha = LocalDate.parse(sc.nextLine());
+        boolean encontrada = false;
+
+        for (Comida c : comidas) {
+            if (c.getFecha().equals(fecha)) {
+                    
+                System.out.println(CYAN + c + RESET);
+                encontrada = true;
+            }
+        }
+        if (!encontrada) System.out.println(RED + "No se encontraron comidas en esa fecha." + RESET);
+    }
+
+    // 5. Buscar comidas por nombre
+    private static void buscarComidaPorNombre(Scanner sc) {
+        System.out.print("Ingrese el nombre de la comida: ");
+        String nombre = sc.nextLine().toLowerCase();
+        boolean encontrada = false;
+
+        for (Comida c : comidas) {
+            if (c.getNombre().toLowerCase().contains(nombre)) {
+                System.out.println(CYAN + c + RESET);
+                encontrada = true;
+            }
+        }
+        if (!encontrada) System.out.println(RED + "No se encontraron coincidencias." + RESET);
     }
     
-if (usuario == null) {
-        System.out.println("❌ Usuario no encontrado.");
-        return;
-    }
+// Solo Nutriente
+    // 6. Calcular información nutricional total del día
+    private static void calcularNutricionTotalDelDia(Scanner sc) {
+        System.out.print("Ingrese la fecha (DD/MM/YY): ");
+        LocalDate fecha = LocalDate.parse(sc.nextLine());
+        Nutriente total = new Nutriente(0, 0, 0, 0);
 
-    System.out.print("Ingrese nombre del alimento: ");
-    String nombre = scanner.nextLine();
-
-    System.out.print("Ingrese calorías por 100g: ");
-    int calorias = scanner.nextInt();
-
-    System.out.print("Ingrese proteínas por 100g: ");
-    double proteinas = scanner.nextDouble();
-
-    System.out.print("Ingrese grasas por 100g: ");
-    double grasas = scanner.nextDouble();
-
-    System.out.print("Ingrese carbohidratos por 100g: ");
-    double carbohidratos = scanner.nextDouble();
-
-    System.out.print("Ingrese cantidad consumida (gramos): ");
-    double cantidad = scanner.nextDouble();
-    scanner.nextLine();
-
-    // Crear el alimento
-    Alimento alimento = new Alimento(alimentos.size() + 1, nombre, calorias, proteinas, grasas, carbohidratos);
-    alimentos.add(alimento);
-
-    // Crear un nuevo registro para este alimento
-    ArrayList<Alimento> listaAlimentos = new ArrayList<>();
-    listaAlimentos.add(alimento);
-
-    RegistroAlimenticio registro = new RegistroAlimenticio(
-        registros.size() + 1,
-        new java.util.Date(),
-        usuario,
-        listaAlimentos
-    );
-    registros.add(registro);
-
-    System.out.println("\n✅ Registro alimenticio guardado correctamente.");
-    }
-//=====Registrar Hábito Diario====
-public void registrarHabito() {
-    if (usuarios.isEmpty()) {
-            System.out.println("⚠️ No hay usuarios registrados. Registre uno primero.");
-            return;
+        for (Comida c : comidas) {
+            if (c.getFecha().equals(fecha)) total.add(c.getNutriente());
         }
+        System.out.println(GREEN + "Totales del día " + fecha + ": " + total + RESET);
+    }
 
-        System.out.println("\n=== REGISTRAR HÁBITO DIARIO ===");
-        mostrarUsuarios();
+    // 7. Consultar nutrientes de una comida específica
+    private static void consultarNutrientesDeComida(Scanner sc) {
+        System.out.print("Ingrese el nombre exacto de la comida: ");
+        String nombre = sc.nextLine();
 
-        System.out.print("Seleccione el ID del usuario: ");
-        int idUsuario = scanner.nextInt();
-        scanner.nextLine();
-
-        Usuario usuario = null;
-        for (Usuario u : usuarios) {
-            if (u.getId() == idUsuario) {
-                usuario = u;
-                break;
+        for (Comida c : comidas) {
+            if (c.getNombre().equalsIgnoreCase(nombre)) {
+                System.out.println(GREEN + "Nutrientes: " + c.getNutriente() + RESET);
+                return;
             }
         }
-
-        if (usuario == null) {
-            System.out.println("❌ Usuario no encontrado.");
-            return;
-        }
-
-        System.out.print("Ingrese cantidad de agua consumida (ml): ");
-        int agua = scanner.nextInt();
-
-        System.out.print("Ingrese minutos de actividad física: ");
-        int actividad = scanner.nextInt();
-
-        System.out.print("Ingrese horas de sueño: ");
-        double sueno = scanner.nextDouble();
-        scanner.nextLine();
-
-        HabitoDiario habito = new HabitoDiario(
-                habitos.size() + 1,
-                new java.util.Date(),
-                usuario,
-                agua,
-                actividad,
-                sueno
-        );
-
-        habitos.add(habito);
-
-        System.out.println("\n✅ Hábito diario registrado correctamente.");
+        System.out.println(RED + "Comida no encontrada." + RESET);
     }
-// ====Mostrar Hábitos Diarios====
-public void mostrarHabitos() {
+
+    //Solo Hábito
+    // 8. Registrar hábito diario
+    private static void registrarHabito(Scanner sc) {
+        System.out.print("Descripción del hábito: ");
+        String desc = sc.nextLine();
+        System.out.print("¿Cumplido hoy? (true/false): ");
+        boolean cumplido = sc.nextBoolean();
+        sc.nextLine();
+        habitos.add(new Habito(desc, LocalDate.now(), cumplido));
+        System.out.println(GREEN + "Hábito registrado correctamente." + RESET);
+    }
+
+    // 9. Mostrar historial de hábitos
+    private static void mostrarHistorialHabitos() {
         if (habitos.isEmpty()) {
-            System.out.println("No hay hábitos registrados.");
+            System.out.println(RED + "No hay hábitos registrados." + RESET);
             return;
         }
-
-        System.out.println("\n=== LISTA DE HÁBITOS DIARIOS ===");
-
-        SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-
-        for (HabitoDiario h : habitos) {
-            System.out.println("------------------------------");
-            System.out.println("🧍cUsuario: " + h.getUsuario().getNombre());
-            System.out.println("📅 Fecha: " + formato.format(h.getFecha()));
-            System.out.println("💧 Agua consumida: " + h.getAguaConsumidaMl() + " ml");
-            System.out.println("🏃 Actividad física: " + h.getMinutosActividad() + " min");
-            System.out.println("Zzz Sueño: " + h.getHorasSueno() + " horas");         
+        for (Habito h : habitos) {
+            System.out.println(CYAN + h + RESET);
         }
-
-        System.out.println("------------------------------");
     }
 
-// ===== Generar Reporte Semanal=====
-public void generarReporteSemanal() {
-        if (usuarios.isEmpty()) {
-            System.out.println("⚠️ No hay usuarios registrados. Registre uno primero.");
+    // Solo meta
+    // 10. Crear meta de nutrición o actividad
+    private static void crearMeta(Scanner sc) {
+        System.out.print("Tipo de meta (Nutrición/Actividad): ");
+        String tipo = sc.nextLine();
+        System.out.print("Descripción: ");
+        String desc = sc.nextLine();
+        System.out.print("Objetivo numérico: ");
+        double obj = sc.nextDouble();
+        sc.nextLine();
+
+        metas.add(new Meta(tipo, desc, obj));
+        System.out.println(GREEN + "Meta creada correctamente." + RESET);
+    }
+
+    // 11. Actualizar progreso hacia la meta
+    private static void actualizarProgresoMeta(Scanner sc) {
+        if (metas.isEmpty()) {
+            System.out.println(RED + "No hay metas registradas." + RESET);
             return;
         }
 
-        System.out.println("\n=== GENERAR REPORTE SEMANAL ===");
-        mostrarUsuarios();
+        System.out.println("Metas disponibles:");
+        for (int i = 0; i < metas.size(); i++) {
+            System.out.println((i + 1) + ". " + metas.get(i));
+        }
 
-        System.out.print("Seleccione el ID del usuario: ");
-        int idUsuario = scanner.nextInt();
-        scanner.nextLine();
+        System.out.print("Seleccione el número de la meta: ");
+        int num = sc.nextInt();
+        System.out.print("Ingrese el progreso a añadir: ");
+        double prog = sc.nextDouble();
+        sc.nextLine();
 
-        Usuario usuario = null;
-        for (Usuario u : usuarios) {
-            if (u.getId() == idUsuario) {
-                usuario = u;
-                break;
+        metas.get(num - 1).actualizarProgreso(prog);
+        System.out.println(GREEN + "Progreso actualizado: " + metas.get(num - 1) + RESET);
+    }
+
+    // 12. Generar reporte semanal
+    private static void generarReporteSemanal() {
+        LocalDate hoy = LocalDate.now();
+        LocalDate hace7dias = hoy.minusDays(7);
+
+        // Resumen de comidas
+        Nutriente total = new Nutriente(0, 0, 0, 0);
+        int comidasSemana = 0;
+        for (Comida c : comidas) {
+            if (!c.getFecha().isBefore(hace7dias) && !c.getFecha().isAfter(hoy)) {
+                total.add(c.getNutriente());
+                comidasSemana++;
             }
         }
 
-        if (usuario == null) {
-            System.out.println("❌ Usuario no encontrado.");
-            return;
+        // Resumen de hábitos
+        long cumplidos = habitos.stream()
+                .filter(h -> !h.getFecha().isBefore(hace7dias) && !h.getFecha().isAfter(hoy) && h.isCumplido())
+                .count();
+        long totalHabitos = habitos.stream()
+                .filter(h -> !h.getFecha().isBefore(hace7dias) && !h.getFecha().isAfter(hoy))
+                .count();
+
+        System.out.println(YELLOW + "\n===== REPORTE SEMANAL =====" + RESET);
+        System.out.println("Periodo: " + hace7dias + " a " + hoy);
+        System.out.println("Comidas registradas: " + comidasSemana);
+        System.out.println("Calorías totales: " + total.getCalorias());
+        System.out.println("Carbohidratos totales: " + total.getCarbohidratos() + " g");
+        System.out.println("Proteínas totales: " + total.getProteinas() + " g");
+        System.out.println("Grasas totales: " + total.getGrasas() + " g");
+
+        System.out.println("\nHábitos cumplidos: " + cumplidos + " / " + totalHabitos);
+        System.out.println("\nMetas actuales:");
+        if (metas.isEmpty()) {
+            System.out.println(RED + "No hay metas creadas." + RESET);
+        } else {
+            for (Meta m : metas) {
+                System.out.println(CYAN + m + RESET);
+            }
         }
-
-        // Calcular fechas de inicio y fin
-        Calendar cal = Calendar.getInstance();
-        Date semanaFin = cal.getTime();
-        cal.add(Calendar.DAY_OF_MONTH, -7);
-        Date semanaInicio = cal.getTime();
-
-        // Datos simulados
-        double caloriasTotales = 15000 + Math.random() * 2000;
-        double promedioAgua = 1800 + Math.random() * 500;
-        double promedioActividad = 45 + Math.random() * 15;
-        double promedioSueno = 7 + Math.random() * 1;
-        int comidas = (int) (14 + Math.random() * 10);
-
-        ReporteSemanal reporte = new ReporteSemanal(
-                reportes.size() + 1,
-                usuario,
-                semanaInicio,
-                semanaFin,
-                caloriasTotales,
-                promedioAgua,
-                promedioActividad,
-                promedioSueno,
-                comidas
-        );
-
-        reportes.add(reporte);
-
-        System.out.println("\n✅ Reporte semanal generado correctamente.");
-        System.out.println(reporte.mostrarReporte());
-    }
-// ===== Mostrar Recomendaciones diarias=====
-public void mostrarRecomendacionesDiarias() {
-    if (usuarios.isEmpty() || habitos.isEmpty()) {
-        System.out.println("⚠️ No hay usuarios o hábitos registrados.");
-        return;
-    }
-
-    mostrarUsuarios(); 
-    System.out.print("Seleccione el ID del usuario: ");
-    int idUsuario = scanner.nextInt();
-    scanner.nextLine();
-
-    Usuario usuario = null;
-    for(Usuario u : usuarios){
-        if(u.getId() == idUsuario) usuario = u;
-    
-        }
-
-    if(usuario == null){
-        System.out.println("❌ Usuario no encontrado.");
-        return;
-    }
-Date hoy = new Date();
-List<Recomendacion> sugerencias = Recomendacion.generarSugerenciasDiarias(usuario, habitos, hoy);
-
-    if(sugerencias.isEmpty()){
-        System.out.println("No hay recomendaciones para hoy. ¡Buen trabajo!");
-    } else {
-        System.out.println("\n=== RECOMENDACIONES DEL DÍA ===");
-        for(Recomendacion r : sugerencias){
-            System.out.println(r.mostrarRecomendacion());
-        }
-    }
-}
-  
-//===== Guardar datos=====
-public void guardarDatos() {
-     try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("datosNutritrack.dat"))) {
-            oos.writeObject(usuarios);
-            oos.writeObject(alimentos);
-            oos.writeObject(registros);
-            oos.writeObject(habitos);
-            oos.writeObject(reportes);
-            System.out.println("✅ Datos guardados correctamente.");
-        } catch (IOException e) {
-            System.out.println("❌ Error al guardar datos: " + e.getMessage());
-        }
-    }
-// ===== Cargar datos=====
-@SuppressWarnings("unchecked")
-    public void cargarDatos() {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("datosNutritrack.dat"))) {
-            usuarios = (ArrayList<Usuario>) ois.readObject();
-            alimentos = (ArrayList<Alimento>) ois.readObject();
-            registros = (ArrayList<RegistroAlimenticio>) ois.readObject();
-            habitos = (ArrayList<HabitoDiario>) ois.readObject();
-            reportes = (ArrayList<ReporteSemanal>) ois.readObject();
-            System.out.println("✅ Datos cargados correctamente.");
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("❌ Error al cargar datos: " + e.getMessage());
-        }
+        System.out.println(YELLOW + "=============================" + RESET);
     }
 }
