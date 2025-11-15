@@ -49,12 +49,4 @@ public class Comida implements Registrable {
     public String toString() {
         return "Comida: " + nombre + " | Fecha: " + fecha + " | Nutrientes: " + nutriente;
     }
-
-    Object getFecha() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    Object getFecha() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
 }

@@ -30,6 +30,10 @@ public class Usuario implements Serializable {
         this.altura = altura;
         this.objetivoNutricional = objetivoNutricional;
     }
+
+    Usuario(String nombre, String email, String pass) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
     
     public String verPerfil() {
         return "ID: " + id + " | Nombre: " + nombre + " | Edad: " + edad +
@@ -87,6 +91,14 @@ public class Usuario implements Serializable {
 
 // Métodos
     public void actualizarPerfil() { // Implementar actualización de datos del usuario
+    }
+
+    Object getEmail() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    Object getContrasena() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
   
  }
